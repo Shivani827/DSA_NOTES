@@ -1,1 +1,492 @@
+##.Dynamic Programming 
+Learning Goal: Understand the core philosophy of DP — from brute force recursion to space-optimized solutions — and apply it confidently to placement problems.
+topics covered:Why DP? → Two Core Properties → Four-Step Framework
+→ Fibonacci → Climbing Stairs → Min Cost Climbing Stairs
+→ House Robber I & II → Coin Change → Longest Common Subsequence
+
+## 🔍 What Is Dynamic Programming?
+Dynamic Programming (DP) is an optimization technique that solves complex problems by breaking them into smaller subproblems — and storing the results so you never solve the same thing twice.
+Think of it like a student taking exams:
+- Without DP: Study topic → Forget → Study again → Forget → Study again
+- With DP: Study once → Write it down → Refer to notes anytime
+
+Without DP:   Solve → Forget → Solve → Forget → Solve
+  With DP:    Solve Once → Store → Reuse
+Recursion  +  Memory  =  Dynamic Programming
+
+##Stage 1: ❓ Why DP? — The Problem With Plain Recursion
+-->The Fibonacci Problem
+def fib(n):
+    if n == 0: return 0
+    if n == 1: return 1
+    return fib(n - 1) + fib(n - 2)
+
+-->What Goes Wrong?
+fib(5)
+├── fib(4)
+│   ├── fib(3)          ← computed again!
+│   │   ├── fib(2)
+│   │   └── fib(1)
+│   └── fib(2)          ← computed again!
+└── fib(3)              ← computed again!
+    ├── fib(2)
+    └── fib(1)
+fib(3) is computed 2 times, fib(2) is computed 3 times.**
+
+Time Complexity: O(2ⁿ) — doubles with every step. For n=40, that's over 1 billion calls!
+DP Fix: Compute once. Store. Reuse. → O(n)
+
+## Stage 2: 📋 Two Core Properties of DP
+Both must be present for DP to apply.
+Property 1: Overlapping Subproblems
+The same smaller problem appears **multiple times** in the recursion tree.
+Fibonacci:  fib(3) is solved repeatedly → Overlapping ✅
+Merge Sort: left half and right half are different problems → No Overlap ❌
+Property 2: Optimal Substructure
+The optimal answer to a big problem is **built from optimal answers to smaller problems**.
+Climbing Stairs: ways(5) = ways(4) + ways(3) ✅
+Shortest Path:   shortest(A→C) = shortest(A→B) + shortest(B→C) ✅
+### Quick Decision Table
+
+| Problem | Overlapping? | Optimal Substructure? | Use |
+|--------|-------------|----------------------|-----|
+| Fibonacci | ✅ | ✅ | DP |
+| Climbing Stairs | ✅ | ✅ | DP |
+| Coin Change | ✅ | ✅ | DP |
+| House Robber | ✅ | ✅ | DP |
+| LCS | ✅ | ✅ | DP |
+| Merge Sort | ❌ | ✅ | D&C |
+| Binary Search | ❌ | ✅ | D&C |
+
+## Stage 3: 🔄 The Four-Step DP Framework
+Every DP problem follows this exact progression:
+Step 1 → Brute Force / Pure Recursion
+          Write the simplest recursive solution.
+          Confirm it gives correct output.
+          Identify the repeated subproblems.
+              ↓
+Step 2 → Memoization (Top-Down DP)
+          Add a dp[] array initialized to -1.
+          Before computing, check if already stored.
+          After computing, store the result.
+              ↓
+Step 3 → Tabulation (Bottom-Up DP)
+          Remove recursion entirely.
+          Start from base cases. Fill a table iteratively.
+              ↓
+Step 4 → Space Optimization
+          Check what the recurrence actually needs.
+          Often only the last 1–2 values are needed.
+          Replace full array with variables.
+
+| Approach | Direction | Uses Recursion? | Space |
+|----------|-----------|----------------|-------|
+| Memoization | Top-Down | Yes | O(n) + stack |
+| Tabulation | Bottom-Up | No | O(n) |
+| Space Optimized | Bottom-Up | No | O(1) |
+
+## Stage 4: 🌀 Problem 1 — Fibonacci Number (LC #509)
+Problem: Find the nth Fibonacci number. F(0)=0, F(1)=1, F(n)=F(n-1)+F(n-2)
+Step 1: Pure Recursion
+def fib(n):
+    if n == 0: return 0
+    if n == 1: return 1
+    return fib(n - 1) + fib(n - 2)
+
+Time: O(2ⁿ) | Space: O(n) stack
+
+Step 2: Memoization (Top-Down)
+def fib(n, dp={}):
+    if n == 0: return 0
+    if n == 1: return 1
+    if n in dp: return dp[n]        # already solved? return it
+    dp[n] = fib(n - 1, dp) + fib(n - 2, dp)
+    return dp[n]
+Time:O(n) | Space: O(n) + recursion stack
+Step 3: Tabulation (Bottom-Up)
+def fib(n):
+    if n == 0: return 0
+    dp = [0] * (n + 1)
+    dp[1] = 1
+    for i in range(2, n + 1):
+        dp[i] = dp[i - 1] + dp[i - 2]
+    return dp[n]
+Time:O(n) | Space: O(n)
+Step 4: Space Optimized
+def fib(n):
+    if n == 0: return 0
+    a, b = 0, 1
+    for _ in range(2, n + 1):
+        a, b = b, a + b
+    return b
+Time: O(n) | Space: O(1) ✅
+Trace for n=5:
+a=0, b=1 → a=1, b=1 → a=1, b=2 → a=2, b=3 → a=3, b=5
+Result: 5
+
+Stage 5: 🪜 Problem 2 — Climbing Stairs (LC #70)
+Problem: You can climb 1 or 2 steps at a time. In how many distinct ways can you reach step n?
+Example (n=4): 1+1+1+1, 1+1+2, 1+2+1, 2+1+1, 2+2 → 5 ways
+Key Insight: ways(n) = ways(n-1) + ways(n-2) ← Same as Fibonacci!
+Step 1: Pure Recursion
+def climbStairs(n):
+    def f(x):
+        if x == 1: return 1
+        if x == 2: return 2
+        return f(x - 1) + f(x - 2)
+    return f(n)
+Time:O(2ⁿ) | Space: O(n)
+
+Step 2: Memoization (Top-Down)
+def climbStairs(n):
+    dp = [-1] * (n + 1)
+    def f(x):
+        if x == 1: return 1
+        if x == 2: return 2
+        if dp[x] != -1: return dp[x]
+        dp[x] = f(x - 1) + f(x - 2)
+        return dp[x]
+    return f(n)
+Time: O(n) | Space: O(n) + stack
+Step 3: Tabulation (Bottom-Up)
+def climbStairs(n):
+    if n <= 2: return n
+    dp = [0] * (n + 1)
+    dp[1] = 1
+    dp[2] = 2
+    for i in range(3, n + 1):
+        dp[i] = dp[i - 1] + dp[i - 2]
+    return dp[n]
+Time: O(n) | Space: O(n)
+Step 4: Space Optimized
+def climbStairs(n):
+    if n <= 2: return n
+    a, b = 1, 2
+    for i in range(3, n + 1):
+        a, b = b, a + b
+    return b
+Time: O(n) | Space: O(1) ✅
+Stage 6: 💰 Problem 3 — Min Cost Climbing Stairs (LC #746)
+
+Problem: Each step has a cost. You can start from step 0 or step 1. You can climb 1 or 2 steps at a time. Find the minimum cost to reach the top (beyond the last index).
+
+Example: cost = [10, 15, 20]
+
+Pay 15 → jump 2 steps → reach top = 15  ✅
+Pay 10 → pay 20 → reach top = 30
+Answer: 15
+Recurrence:** dp[i] = cost[i] + min(dp[i-1], dp[i-2])
+Step 1: Pure Recursion
+def minCostClimbingStairs(cost):
+    n = len(cost)
+    def f(i):
+        if i == 0: return cost[0]
+        if i == 1: return cost[1]
+        return cost[i] + min(f(i - 1), f(i - 2))
+    return min(f(n - 1), f(n - 2))   # can start from step 0 or 1
+Time: O(2ⁿ) | Space: O(n)
+Step 2: Memoization (Top-Down)
+def minCostClimbingStairs(cost):
+    n = len(cost)
+    dp = [-1] * n
+    def f(i):
+        if i == 0: return cost[0]
+        if i == 1: return cost[1]
+        if dp[i] != -1: return dp[i]
+        dp[i] = cost[i] + min(f(i - 1), f(i - 2))
+        return dp[i]
+    return min(f(n - 1), f(n - 2))
+Time: O(n) | Space: O(n) + stack
+Step 3: Tabulation (Bottom-Up)
+
+def minCostClimbingStairs(cost):
+    n = len(cost)
+    dp = [0] * n
+    dp[0] = cost[0]
+    dp[1] = cost[1]
+    for i in range(2, n):
+        dp[i] = cost[i] + min(dp[i - 1], dp[i - 2])
+    return min(dp[n - 1], dp[n - 2])
+Time: O(n) | Space: O(n)
+Step 4: Space Optimized
+def minCostClimbingStairs(cost):
+    n = len(cost)
+    a, b = cost[0], cost[1]
+    for i in range(2, n):
+        a, b = b, cost[i] + min(a, b)
+    return min(a, b)
+Time:O(n) | Space:O(1) ✅
+
+Stage 7: 🏠 Problem 4 — House Robber I (LC #198)
+Problem: Rob houses in a row. Adjacent houses have an alarm — cannot rob two in a row. Maximize the total amount robbed.
+
+Example: nums = [2, 7, 9, 3, 1]
+Rob 2, 9, 1 = 12  ✅  (best)
+Rob 7, 3    = 10
+Recurrence:
+At each house i, you have 2 choices:
+  Pick:     nums[i] + dp[i-2]   (rob this, skip previous)
+  Not Pick: dp[i-1]             (skip this, take best up to previous)
+  dp[i] = max(pick, not_pick)
+Step 1: Pure Recursion
+```python
+def rob(nums):
+    def f(i):
+        if i == 0: return nums[0]
+        if i < 0:  return 0
+        pick     = nums[i] + f(i - 2)
+        not_pick = f(i - 1)
+        return max(pick, not_pick)
+    return f(len(nums) - 1)
+
+Time: O(2ⁿ) | Space: O(n)
+Step 2: Memoization (Top-Down)
+
+def rob(nums):
+    n = len(nums)
+    dp = [-1] * n
+    def f(i):
+        if i == 0: return nums[0]
+        if i < 0:  return 0
+        if dp[i] != -1: return dp[i]
+        pick     = nums[i] + f(i - 2)
+        not_pick = f(i - 1)
+        dp[i] = max(pick, not_pick)
+        return dp[i]
+    return f(n - 1)
+
+Time: O(n) | Space: O(n) + stack
+Step 3: Tabulation (Bottom-Up)
+def rob(nums):
+    n = len(nums)
+    dp = [0] * n
+    dp[0] = nums[0]
+    for i in range(1, n):
+        pick     = nums[i] + (dp[i - 2] if i > 1 else 0)
+        not_pick = dp[i - 1]
+        dp[i] = max(pick, not_pick)
+    return dp[n - 1]
+
+Time:O(n) | Space: O(n)
+
+ Step 4: Space Optimized
+def rob(nums):
+    prev2 = 0
+    prev1 = nums[0]
+    for i in range(1, len(nums)):
+        pick     = nums[i] + prev2
+        not_pick = prev1
+        curr     = max(pick, not_pick)
+        prev2, prev1 = prev1, curr
+    return prev1
+Time:O(n) |Space:O(1) ✅
+Stage 8: 🏘️ Problem 5 — House Robber II (LC #213)
+Problem: Same as House Robber I, but houses are arranged in a **circle**. First and last houses are adjacent — cannot rob both.
+
+Key Insight: Break the circle into two linear problems:
+- Case A: Rob from house 0 to n-2 (exclude last)
+- Case B: Rob from house 1 to n-1 (exclude first)
+- Answer = max(Case A, Case B)
+Example: nums = [2, 3, 2]
+Case A: [2, 3]  → best = 3
+Case B: [3, 2]  → best = 3
+Answer = 3
+# Complete Solution
+def rob(nums):
+    if len(nums) == 1: return nums[0]
+    def rob_linear(arr):
+        prev2 = 0
+        prev1 = arr[0]
+        for i in range(1, len(arr)):
+            pick     = arr[i] + prev2
+            not_pick = prev1
+            curr     = max(pick, not_pick)
+            prev2, prev1 = prev1, curr
+        return prev1
+    case_a = rob_linear(nums[:-1])   # exclude last house
+    case_b = rob_linear(nums[1:])    # exclude first house
+    return max(case_a, case_b)
+Time: O(n) | Space: O(1) ✅
+Tip: House Robber II = House Robber I applied twice on two subarrays. Reuse the linear solution!
+
+Stage 9: 🪙 Problem 6 — Coin Change (LC #322)
+Problem: Given coins of different denominations and an amount, find the **minimum number of coins** to make up that amount. Return -1 if not possible.
+Example: coins = [1, 5, 6, 9], amount = 11
+9 + 1 + 1 = 11  → 3 coins
+6 + 5 = 11      → 2 coins  ✅ (minimum)
+Recurrence: For each coin, if we use it: dp[target] = 1 + dp[target - coin]
+Step 1: Pure Recursion
+def coinChange(coins, amount):
+    def f(target):
+        if target == 0: return 0
+        ans = float('inf')
+        for coin in coins:
+            if target >= coin:
+                ans = min(ans, 1 + f(target - coin))
+        return ans
+    res = f(amount)
+    return res if res != float('inf') else -1
+
+Time: Exponential | Space: O(amount)
+
+Step 2: Memoization (Top-Down)
+def coinChange(coins, amount):
+    dp = [-1] * (amount + 1)
+    def f(target):
+        if target == 0: return 0
+        if dp[target] != -1: return dp[target]
+        ans = float('inf')
+        for coin in coins:
+            if target >= coin:
+                ans = min(ans, 1 + f(target - coin))
+        dp[target] = ans
+        return dp[target]
+    res = f(amount)
+    return res if res != float('inf') else -1
+Time: O(amount × len(coins)) | Space: O(amount) + stack
+Step 3: Tabulation (Bottom-Up)
+def coinChange(coins, amount):
+    dp = [float('inf')] * (amount + 1)
+    dp[0] = 0                              # 0 coins needed for amount 0
+    for target in range(1, amount + 1):
+        for coin in coins:
+            if target >= coin:
+                dp[target] = min(dp[target], 1 + dp[target - coin])
+    return dp[amount] if dp[amount] != float('inf') else -1
+Trace for coins=[1,5,6], amount=6:
+dp[0]=0
+dp[1]=1  (use coin 1)
+dp[2]=2
+dp[3]=3
+dp[4]=4
+dp[5]=1  (use coin 5)
+dp[6]=1  (use coin 6) ✅
+
+Time: O(amount × len(coins)) | Space: O(amount)
+ 💡 **No space optimization possible here** — dp[target] depends on values all the way back to dp[0].
+
+Stage 10: 🔤 Problem 7 — Longest Common Subsequence (LC #1143)
+Problem:Given two strings, find the length of their longest common subsequence (LCS). A subsequence maintains relative order but need not be contiguous.
+Example: text1 = "abcde", text2 = "ace"
+LCS = "ace" → length 3
+Recurrence:
+If text1[i] == text2[j]:
+    dp[i][j] = 1 + dp[i-1][j-1]             (match: include both)
+Else:
+    dp[i][j] = max(dp[i-1][j], dp[i][j-1])  (no match: skip one)
+
+Step 1: Pure Recursion
+def longestCommonSubsequence(text1, text2):
+    def f(i, j):
+        if i < 0 or j < 0: return 0
+        if text1[i] == text2[j]:
+            return 1 + f(i - 1, j - 1)
+        return max(f(i - 1, j), f(i, j - 1))
+    return f(len(text1) - 1, len(text2) - 1)
+Time: O(2^(m+n)) | Space: O(m+n)
+Step 2: Memoization (Top-Down)
+def longestCommonSubsequence(text1, text2):
+    m, n = len(text1), len(text2)
+    dp = [[-1] * n for _ in range(m)]
+    def f(i, j):
+        if i < 0 or j < 0: return 0
+        if dp[i][j] != -1: return dp[i][j]
+        if text1[i] == text2[j]:
+            dp[i][j] = 1 + f(i - 1, j - 1)
+        else:
+            dp[i][j] = max(f(i - 1, j), f(i, j - 1))
+        return dp[i][j]
+    return f(m - 1, n - 1)
+Time: O(m × n) | Space: O(m × n) + stack
+
+Step 3: Tabulation (Bottom-Up)
+
+def longestCommonSubsequence(text1, text2):
+    m, n = len(text1), len(text2)
+    # Use 1-indexed to avoid negative index handling
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if text1[i - 1] == text2[j - 1]:
+                dp[i][j] = 1 + dp[i - 1][j - 1]
+            else:
+                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
+    return dp[m][n]
+
+Trace for text1="abcde", text2="ace":
+
+     ""  a  c  e
+""  [ 0  0  0  0 ]
+a   [ 0  1  1  1 ]
+b   [ 0  1  1  1 ]
+c   [ 0  1  2  2 ]
+d   [ 0  1  2  2 ]
+e   [ 0  1  2  3 ]  ← Answer: 3
+
+Time:** O(m × n) | Space: O(m × n)
+
+Step 4: Space Optimized
+def longestCommonSubsequence(text1, text2):
+    m, n = len(text1), len(text2)
+    prev = [0] * (n + 1)   # represents the previous row
+    for i in range(1, m + 1):
+        curr = [0] * (n + 1)
+        for j in range(1, n + 1):
+            if text1[i - 1] == text2[j - 1]:
+                curr[j] = 1 + prev[j - 1]
+            else:
+                curr[j] = max(prev[j], curr[j - 1])
+        prev = curr
+    return prev[n]
+
+Time:O(m × n) | Space: O(n) ✅
+
+💡Key Insight:Each row only needs the previous row → keep just prev and curr arrays.
+
+## 🔄 Is DP Always Linear?
+No!Just like the analytics lifecycle, DP solutions evolve iteratively:
+
+Understand Problem
+      ↓
+Write Recurrence Relation (on paper first!)
+      ↓
+Code Pure Recursion → "TLE on large input!"
+      ↓
+Add Memoization → "Passes but uses extra stack space"
+      ↓
+Convert to Tabulation → "Cleaner, no stack overflow"
+      ↓
+Optimize Space → "Interviewer impressed!" ✅
+
+🌟 Summary — All Problems at a Glance
+
+| Problem | Recurrence | Time | Best Space |
+|---------|-----------|------|-----------|
+| Fibonacci | f(n) = f(n-1) + f(n-2) | O(n) | O(1) |
+| Climbing Stairs | f(n) = f(n-1) + f(n-2) | O(n) | O(1) |
+| Min Cost Stairs | dp[i] = cost[i] + min(dp[i-1], dp[i-2]) | O(n) | O(1) |
+| House Robber I | dp[i] = max(nums[i]+dp[i-2], dp[i-1]) | O(n) | O(1) |
+| House Robber II | Robber I on two subarrays | O(n) | O(1) |
+| Coin Change | dp[t] = min(dp[t], 1+dp[t-coin]) | O(n×C) | O(n) |
+| LCS | dp[i][j] = 1+dp[i-1][j-1] or max(...) | O(m×n) | O(n) |
+
+## ✅ Key Takeaways
+
+1. **DP = Recursion + Storage** — always write the recursive solution first
+2. **Two conditions:** Overlapping Subproblems + Optimal Substructure
+3. **Four-step approach:** Recursion → Memoization → Tabulation → Space Optimization
+4. **1D problems** (Fib, Stairs, Robber): usually reduce to **O(1) space**
+5. **2D problems** (LCS): usually reduce to **O(n) space** (one row at a time)
+6. **Write the recurrence on paper before touching code** — this is the hardest step
+7. **Coin Change has no space optimization** — dp[t] depends on all previous values
+
+ 🧠 Quick Check Questions
+
+1. What are the two conditions for a problem to be solved using DP?
+2. What is the difference between Memoization and Tabulation?
+3. Why can House Robber II be solved by running House Robber I twice?
+4. In LCS, what does dp[i][j] represent?
+5. Why is Coin Change different from Fibonacci in terms of space optimization?
+6. Trace the LCS table for text1 = "abcd", text2 = "bd". What is the answer?
+
 
