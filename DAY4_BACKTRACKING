@@ -1,1 +1,704 @@
+        DAY 4 NOTES — RECURSION & BACKTRACKING
+==============================================================
+Topics Covered:
+  Level 1 : Recursion — Print 1-N, Factorial, Fibonacci
+  Level 2 : Easy Backtracking — Binary Strings, Subsets (LC 78)
+  Level 3 : Medium — Combination Sum (LC 39), Combinations (LC 77)
+  Level 4 : Medium — Permutations (LC 46), N-Queens (LC 51)
+==============================================================
+LEVEL 1 — RECURSION
+
+WHAT IS RECURSION?
+A function calling itself is called Recursion.
+Before jumping into recursion, let's look at a simple loop:
+    for i in range(5, 0, -1):
+        print(i)
+Output: 5 4 3 2 1
+Now, can we do the same thing using a function that calls itself?
+    def fun(n):
+        if n == 0:     # stop here
+            return
+        print(n)
+        fun(n - 1)     # call itself with a smaller value
+    fun(5)
+Output: 5 4 3 2 1
+This is recursion. The function fun() calls itself with n-1
+each time until it reaches 0.
+
+#TWO PARTS EVERY RECURSIVE FUNCTION MUST HAVE
+  1. Base Case  — the stopping condition.
+                  Without this, the function never stops
+                  and you get a RecursionError.
+  2. Recursive Call — calling the same function with a
+                      smaller or simpler input.
+    Recursion = Base Case + Smaller Problem
+Ask yourself: What if I remove the base case?
+  → fun() will keep calling itself forever → RecursionError
+--------------------------------------------------------------
+THE CALL STACK — HOW PYTHON TRACKS RECURSIVE CALLS
+--------------------------------------------------------------
+When you call fun(3), Python does this internally:
+    fun(3)   <-- called first, waits
+    |
+    fun(2)   <-- called by fun(3), waits
+    |
+    fun(1)   <-- called by fun(2), waits
+    |
+    fun(0)   <-- base case! returns immediately
+Every function call WAITS for its inner call to finish
+before it continues. This is the call stack.
+--------------------------------------------------------------
+STACK UNWINDING — WHAT HAPPENS AFTER BASE CASE
+--------------------------------------------------------------
+Now let's flip the print to AFTER the recursive call:
+    def fun(n):
+        if n == 0:
+            return
+        fun(n - 1)   # recursive call first
+        print(n)     # print AFTER the call returns
+    fun(3)
+Output: 1 2 3
+Why? Because the call stack unwinds from the bottom up:
+    fun(3) called fun(2)  → waiting...
+    fun(2) called fun(1)  → waiting...
+    fun(1) called fun(0)  → waiting...
+    fun(0) → base case, returns
+    fun(1) resumes → prints 1
+    fun(2) resumes → prints 2
+    fun(3) resumes → prints 3
+Key idea: Code BEFORE the recursive call runs top-down.
+          Code AFTER the recursive call runs bottom-up.
+--------------------------------------------------------------
+PROBLEM 1 — PRINT 1 TO N
+--------------------------------------------------------------
+Print numbers from 1 to N using recursion.
+Approach: print AFTER the recursive call (bottom-up).
+    def print1ToN(n):
+        if n == 0:       # base case: stop at 0
+            return
+        print1ToN(n - 1) # go down to 1 first
+        print(n)         # then print on the way back up
+    print1ToN(5)
+Output: 1 2 3 4 5
+Call stack trace for print1ToN(3):
+    print1ToN(3)
+    |
+    print1ToN(2)
+    |
+    print1ToN(1)
+    |
+    print1ToN(0)  -> return
+    <- print(1)
+    <- print(2)
+    <- print(3)
+--------------------------------------------------------------
+PROBLEM 2 — FACTORIAL
+--------------------------------------------------------------
+What is factorial?
+  5! = 5 x 4 x 3 x 2 x 1 = 120
+  n! = n x (n-1)!
+Notice: n! = n x (n-1)!  — this is the recursive structure.
+    def factorial(n):
+        if n == 1:            # base case: 1! = 1
+            return 1
+        return n * factorial(n - 1)
+    print(factorial(5))   # Output: 120
+Call stack trace for factorial(4):
+    factorial(4)
+    = 4 * factorial(3)
+         = 3 * factorial(2)
+              = 2 * factorial(1)
+                   = 1          <- base case
+
+Unwinding:
+    factorial(1) = 1
+    factorial(2) = 2 * 1 = 2
+    factorial(3) = 3 * 2 = 6
+    factorial(4) = 4 * 6 = 24
+--------------------------------------------------------------
+PROBLEM 3 — FIBONACCI
+Fibonacci sequence: 0, 1, 1, 2, 3, 5, 8, 13, ...
+  fib(0) = 0
+  fib(1) = 1
+  fib(n) = fib(n-1) + fib(n-2)   for n > 1
+    def fib(n):
+        if n <= 1:              # base case
+            return n
+        return fib(n - 1) + fib(n - 2)
+    for i in range(6):
+        print(fib(i))
+Output: 0 1 1 2 3 5
+Tree of calls for fib(4):
+             fib(4)
+           /        \
+        fib(3)      fib(2)
+        /    \       /    \
+    fib(2) fib(1) fib(1) fib(0)
+    /    \
+ fib(1) fib(0)
+Notice: fib(2) is calculated TWICE.
+This is called overlapping subproblems — this is why
+Dynamic Programming (DP) becomes important for Fibonacci
+at large n. (Covered in later sessions.)
+Time Complexity of naive recursion: O(2^n)
+==============================================================
+LEVEL 2 — INTRODUCTION TO BACKTRACKING
+
+WHAT IS BACKTRACKING?
+Backtracking = Recursion + Making Choices + Undoing Choices
+Think of it like exploring a maze:
+  - You walk down a path.
+  - If it's a dead end, you come BACK and try another path.
+  - You keep doing this until you find the exit.
+The process of:
+  1. Making a choice
+  2. Exploring all possibilities with that choice (recursion)
+  3. Undoing that choice to try the next one
+...is called Backtracking.
+--------------------------------------------------------------
+BUILDING THE INTUITION — BINARY STRINGS
+Question: How many binary strings of length 2 are possible?
+At position 1: choices are 0 or 1
+At position 2: choices are 0 or 1
+Decision tree:
+              ""
+            /    \
+           0      1
+          / \    / \
+        00  01  10  11
+Total = 4 = 2^2
+What if we add a constraint: string must START with 1?
+Then we only take the right branch:
+              ""
+                \
+                 1
+                / \
+              10   11
+Total = 2
+This is backtracking with a constraint.
+We skip invalid choices early — this is called PRUNING.
+--------------------------------------------------------------
+FIRST BACKTRACKING PROBLEM — GENERATE ALL BINARY STRINGS
+--------------------------------------------------------------
+Generate all binary strings of length 2 (no undoing needed
+here because strings are immutable — we pass a new string
+each time).
+    def generate(s):
+        if len(s) == 2:   # goal reached
+            print(s)
+            return
+        generate(s + "0")   # choose 0 and explore
+        generate(s + "1")   # choose 1 and explore
+    generate("")
+Output:
+  00
+  01
+  10
+  11
+Call tree:
+    generate("")
+    ├── generate("0")
+    │   ├── generate("00")  → print "00"
+    │   └── generate("01")  → print "01"
+    └── generate("1")
+        ├── generate("10")  → print "10"
+        └── generate("11")  → print "11"
+--------------------------------------------------------------
+THE BACKTRACKING TEMPLATE
+-Almost every backtracking problem follows this pattern:
+   def backtrack(path):
+        if goal_reached:
+            save result
+            return
+        for choice in all_possible_choices:
+            # Step 1: Make the choice
+            choose
+            # Step 2: Explore with this choice
+            backtrack(path)
+            # Step 3: Undo the choice
+            undo
+The "undo" step is what separates backtracking from
+plain recursion. Without it, choices from one branch
+would carry over into the next branch.
+--------------------------------------------------------------
+PROBLEM 4 — SUBSETS (LeetCode 78)
+Problem: Given nums = [1, 2, 3], return all possible subsets.
+Expected output:
+  [[], [1], [2], [3], [1,2], [1,3], [2,3], [1,2,3]]
+Key Insight:
+  For EACH element, we have exactly TWO choices:
+    - TAKE it (include in current subset)
+    - SKIP it (don't include)
+Decision tree for [1, 2, 3]:
+                         []
+                    /          \
+              Take 1           Skip 1
+               [1]               []
+             /     \           /     \
+         Take 2  Skip 2    Take 2  Skip 2
+          [1,2]   [1]       [2]      []
+          /  \    /  \      /  \    /  \
+        T3  S3  T3  S3   T3  S3  T3  S3
+      [1,2,3][1,2][1,3][1] [2,3][2] [3] []
+Total leaves = 2^3 = 8 subsets
+Total subsets of n elements = 2^n
+THE CODE:
+    def subsets(nums):
+        res = []
+        def dfs(i, subset):
+            # Base case: checked all elements
+            if i == len(nums):
+                res.append(subset[:])   # save a COPY
+                return
+            # Choice 1: TAKE nums[i]
+            subset.append(nums[i])
+            dfs(i + 1, subset)
+            # UNDO — remove nums[i] before next choice
+            subset.pop()
+            # Choice 2: SKIP nums[i]
+            dfs(i + 1, subset)
+        dfs(0, [])
+        return res
+    print(subsets([1, 2, 3]))
+Why subset[:]?
+  If we write res.append(subset), we store a reference.
+  When subset changes later, the stored result also changes.
+  subset[:] creates a COPY, so the result is frozen.
+Why subset.pop()?
+  After exploring all paths that INCLUDE nums[i],
+  we need to remove it before exploring paths that SKIP it.
+  Without pop(), the next branch would wrongly inherit
+  the previous choice.
+STEP-BY-STEP TRACE (nums = [1, 2, 3]):
+  dfs(0, [])
+    Take 1 → subset = [1]
+    dfs(1, [1])
+      Take 2 → subset = [1,2]
+      dfs(2, [1,2])
+        Take 3 → subset = [1,2,3]
+        dfs(3, [1,2,3]) → save [1,2,3], return
+        pop() → subset = [1,2]
+        dfs(3, [1,2]) → save [1,2], return
+      pop() → subset = [1]
+      dfs(2, [1])
+        Take 3 → subset = [1,3]
+        dfs(3, [1,3]) → save [1,3], return
+        pop() → subset = [1]
+        dfs(3, [1]) → save [1], return
+    pop() → subset = []
+    dfs(1, [])
+      Take 2 → subset = [2]
+      dfs(2, [2])
+        Take 3 → subset = [2,3]
+        dfs(3, [2,3]) → save [2,3], return
+        pop() → subset = [2]
+        dfs(3, [2]) → save [2], return
+      pop() → subset = []
+      dfs(2, [])
+        Take 3 → subset = [3]
+        dfs(3, [3]) → save [3], return
+        pop() → subset = []
+        dfs(3, []) → save [], return
+Final result:
+  [[1,2,3], [1,2], [1,3], [1], [2,3], [2], [3], []]
+Important idea:
+  append()  → Take
+  dfs()     → Explore
+  pop()     → Undo
+  dfs()     → Explore the other choice (skip)
+==============================================================
+LEVEL 3 — MEDIUM BACKTRACKING
+
+PROBLEM 5 — COMBINATION SUM (LeetCode 39)
+Problem:
+  Given an array of distinct integers (candidates) and a
+  target, return all unique combinations where the chosen
+  numbers sum to target.
+  The SAME number can be used UNLIMITED times.
+Example:
+  candidates = [2, 3, 6, 7], target = 7
+  Output: [[2,2,3], [7]]
+Key Differences from Subsets:
+  1. We stop NOT at end of array, but when sum == target
+     (or sum > target — pruning).
+  2. We can REUSE the same element (stay at same index).
+  3. No need to SKIP — just move forward or stay.
+Decision tree for candidates = [2, 3, 6, 7], target = 7:
+  Start: [], sum = 0
+  Try 2: [2], sum = 2
+    Try 2: [2,2], sum = 4
+      Try 2: [2,2,2], sum = 6
+        Try 2: [2,2,2,2], sum = 8 > 7 → PRUNE
+        Try 3: [2,2,2,3], sum = 9 > 7 → PRUNE
+        ...
+      Try 3: [2,2,3], sum = 7 == target → SAVE ✓
+      Try 6: [2,2,6], sum = 10 > 7 → PRUNE
+      ...
+    ...
+  Try 7: [7], sum = 7 == target → SAVE ✓
+THE CODE:
+    def combinationSum(candidates, target):
+        res = []
+        def backtrack(start, path, remaining):
+            # Goal reached
+            if remaining == 0:
+                res.append(path[:])
+                return
+            # Pruning: if remaining < 0, no point going further
+            if remaining < 0:
+                return
+            for i in range(start, len(candidates)):
+                path.append(candidates[i])
+                # Stay at i (not i+1) because we can reuse
+                backtrack(i, path, remaining - candidates[i])
+                path.pop()   # undo
+        backtrack(0, [], target)
+        return res
+    print(combinationSum([2, 3, 6, 7], 7))
+    # Output: [[2, 2, 3], [7]]
+Why start from i (not i+1)?
+  Because the same number can be used again.
+  If we used i+1, each number could only be picked once.
+Why start parameter?
+  To avoid duplicates like [2,3] and [3,2] both appearing.
+  We only look at candidates from index 'start' onwards.
+STEP-BY-STEP for candidates = [2,3], target = 4:
+  backtrack(0, [], 4)
+    take 2 → path=[2], rem=2
+    backtrack(0, [2], 2)
+      take 2 → path=[2,2], rem=0
+      backtrack(0, [2,2], 0) → save [2,2] ✓
+      pop() → path=[2]
+      take 3 → path=[2,3], rem=-1
+      backtrack(1, [2,3], -1) → prune (rem < 0)
+      pop() → path=[2]
+    pop() → path=[]
+    take 3 → path=[3], rem=1
+    backtrack(1, [3], 1)
+      take 3 → path=[3,3], rem=-2 → prune
+    pop() → path=[]
+  Result: [[2,2]]
+Time Complexity: O(N^(T/M)) where T=target, M=min candidate
+--------------------------------------------------------------
+PROBLEM 6 — COMBINATIONS (LeetCode 77)
+Problem:
+  Given two integers n and k, return all possible combinations
+  of k numbers chosen from the range [1, n].
+Example:
+  n = 4, k = 2
+  Output: [[1,2],[1,3],[1,4],[2,3],[2,4],[3,4]]
+Key Difference from Combination Sum:
+  - Each number can only be used ONCE.
+  - We want exactly k numbers (not a sum target).
+  - We move to i+1 each time (no reuse).
+Decision tree for n=4, k=2:
+  Start with 1:
+    [1,2] ✓
+    [1,3] ✓
+    [1,4] ✓
+  Start with 2:
+    [2,3] ✓
+    [2,4] ✓
+  Start with 3:
+    [3,4] ✓
+  Start with 4:
+    No more numbers → nothing
+THE CODE:
+    def combine(n, k):
+        res = []
+        def backtrack(start, path):
+            # Goal: path has exactly k numbers
+            if len(path) == k:
+                res.append(path[:])
+                return
+            for i in range(start, n + 1):
+                path.append(i)
+                backtrack(i + 1, path)   # i+1: no reuse
+                path.pop()
+        backtrack(1, [])
+        return res
+    print(combine(4, 2))
+    # Output: [[1,2],[1,3],[1,4],[2,3],[2,4],[3,4]]
+Optimization (Pruning):
+  If remaining spots needed > remaining numbers available,
+  we can stop early.
+  Remaining spots = k - len(path)
+  Remaining numbers = n - i + 1
+  If (n - i + 1) < (k - len(path)):
+      break   # not enough numbers left
+STEP-BY-STEP for n=3, k=2:
+  backtrack(1, [])
+    take 1 → path=[1]
+    backtrack(2, [1])
+      take 2 → path=[1,2] → len==2 → save [1,2] ✓
+      take 3 → path=[1,3] → len==2 → save [1,3] ✓
+    pop() → path=[]
+    take 2 → path=[2]
+    backtrack(3, [2])
+      take 3 → path=[2,3] → len==2 → save [2,3] ✓
+    pop() → path=[]
+    take 3 → path=[3]
+    backtrack(4, [3])  → start > n, loop doesn't run
+    pop() → path=[]
+  Result: [[1,2],[1,3],[2,3]]
+Comparison — Combination Sum vs Combinations:
+  Feature           Combination Sum (39)    Combinations (77)
+  -------           --------------------    -----------------
+  Reuse element?    YES (stay at i)         NO (move to i+1)
+  Stop condition    sum == target           len(path) == k
+  Input range       given candidates        1 to n
+  Pruning           sum > target            not enough left
+==============================================================
+LEVEL 4 — MEDIUM/HARD BACKTRACKING
+PROBLEM 7 — PERMUTATIONS (LeetCode 46)
+--------------------------------------------------------------
+Problem:
+  Given an array of distinct integers, return all permutations.
+Example:
+  nums = [1, 2, 3]
+  Output: [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]
+What is a Permutation?
+  A permutation is an ARRANGEMENT of all elements.
+  Order matters: [1,2,3] and [1,3,2] are DIFFERENT.
+  Total permutations of n elements = n! (n factorial)
+    3! = 6 permutations for [1,2,3]
+Key Difference from Subsets/Combinations:
+  - We use ALL elements (no skip).
+  - Order matters.
+  - We cannot reuse an element in the SAME permutation.
+  - We need to track which elements are already used.
+Decision tree for [1, 2, 3]:
+                    []
+            /        |        \
+           1         2         3
+          / \       / \       / \
+         2   3     1   3     1   2
+         |   |     |   |     |   |
+         3   2     3   1     2   1
+        [1,2,3] [1,3,2] [2,1,3] [2,3,1] [3,1,2] [3,2,1]
+THE CODE:
+    def permute(nums):
+        res = []
+        used = [False] * len(nums)   # track used elements
+        def backtrack(path):
+            # Goal: all elements are in path
+            if len(path) == len(nums):
+                res.append(path[:])
+                return
+            for i in range(len(nums)):
+                if used[i]:          # skip already used
+                    continue
+                # Choose
+                used[i] = True
+                path.append(nums[i])
+                # Explore
+                backtrack(path)
+                # Undo
+                path.pop()
+                used[i] = False
+        backtrack([])
+        return res
+    print(permute([1, 2, 3]))
+STEP-BY-STEP TRACE for [1, 2]:
+  backtrack([])
+    i=0: use 1 → used=[T,F], path=[1]
+    backtrack([1])
+      i=0: used[0]=True → skip
+      i=1: use 2 → used=[T,T], path=[1,2]
+      backtrack([1,2]) → len==2 → save [1,2] ✓
+      pop() → path=[1], used=[T,F]
+    pop() → path=[], used=[F,F]
+    i=1: use 2 → used=[F,T], path=[2]
+    backtrack([2])
+      i=0: use 1 → used=[T,T], path=[2,1]
+      backtrack([2,1]) → len==2 → save [2,1] ✓
+      pop() → path=[2], used=[F,T]
+      i=1: used[1]=True → skip
+    pop() → path=[], used=[F,F]
+  Result: [[1,2],[2,1]]
+Why used[] array?
+  We need to track which elements are already IN the
+  current path. Unlike combinations, we can pick any
+  element from the full array — but not the same one twice
+  in the same permutation.
+Alternative approach (swap-based):
+    def permute(nums):
+        res = []
+        def backtrack(start):
+            if start == len(nums):
+                res.append(nums[:])
+                return
+            for i in range(start, len(nums)):
+                nums[start], nums[i] = nums[i], nums[start]  # swap
+                backtrack(start + 1)
+                nums[start], nums[i] = nums[i], nums[start]  # unswap
+        backtrack(0)
+        return res
+Comparison — All Problems So Far:
+  Problem           Take/Skip?  Reuse?  Order?  Track used?
+  -------           ----------  ------  ------  -----------
+  Subsets (78)      Yes (skip)  No      No      No
+  Comb Sum (39)     No          Yes     No      No
+  Combinations (77) No          No      No      No
+  Permutations (46) No (all)    No      YES     Yes (used[])
+--------------------------------------------------------------
+PROBLEM 8 — N-QUEENS (LeetCode 51)
+--------------------------------------------------------------
+Problem:
+  Place N queens on an N x N chessboard such that no two
+  queens attack each other.
+  Return all valid board configurations.
+Example for N=4:
+  Solution 1:         Solution 2:
+  . Q . .             . . Q .
+  . . . Q             Q . . .
+  Q . . .             . . . Q
+  . . Q .             . Q . .
+N=4 → 2 solutions
+N=8 → 92 solutions
+How does a Queen attack?
+  A queen can attack:
+    - Same ROW (horizontal)
+    - Same COLUMN (vertical)
+    - Same DIAGONAL (top-left to bottom-right)
+    - Same ANTI-DIAGONAL (top-right to bottom-left)
+Strategy — Process Row by Row:
+  Place exactly ONE queen per row.
+  This automatically handles the ROW conflict.
+  We only need to check:
+    1. Column conflict
+    2. Main diagonal conflict   (row - col is same)
+    3. Anti-diagonal conflict   (row + col is same)
+Why row-col for main diagonal?
+  All cells on the same diagonal have the same (row - col).
+  Example (0-indexed):
+    (0,0): 0-0=0
+    (1,1): 1-1=0
+    (2,2): 2-2=0   ← all same diagonal, all row-col=0
+Why row+col for anti-diagonal?
+  All cells on the same anti-diagonal have the same (row+col).
+  Example:
+    (0,3): 0+3=3
+    (1,2): 1+2=3
+    (2,1): 2+1=3   ← all same anti-diagonal, all row+col=3
+THE CODE:
+    def solveNQueens(n):
+        res = []
+        # Sets to track occupied columns and diagonals
+        cols = set()
+        diag = set()      # row - col
+        anti_diag = set() # row + col
+        board = [['.' ] * n for _ in range(n)]
+        def backtrack(row):
+            # All rows filled → valid solution found
+            if row == n:
+                # Convert board to list of strings
+                res.append(["".join(r) for r in board])
+                return
+            for col in range(n):
+                # Check if this position is under attack
+                if col in cols:
+                    continue
+                if (row - col) in diag:
+                    continue
+                if (row + col) in anti_diag:
+                    continue
+                # Place queen
+                cols.add(col)
+                diag.add(row - col)
+                anti_diag.add(row + col)
+                board[row][col] = 'Q'
+                # Recurse to next row
+                backtrack(row + 1)
+                # Remove queen (backtrack)
+                cols.remove(col)
+                diag.remove(row - col)
+                anti_diag.remove(row + col)
+                board[row][col] = '.'
+        backtrack(0)
+        return res
+    result = solveNQueens(4)
+    for board in result:
+        for row in board:
+            print(row)
+        print()
+STEP-BY-STEP for N=4 (First Solution):
+  Row 0: Try col 0 → cols={0}, diag={0}, anti={0}
+    Board:
+    Q . . .
+    . . . .
+    . . . .
+    . . . .
+  Row 1: Try col 0 → col conflict → skip
+         Try col 1 → diag (1-1=0) conflict → skip
+         Try col 2 → no conflict → place
+    Board:
+    Q . . .
+    . . Q .
+    . . . .
+    . . . .
+  Row 2: Try col 0 → col conflict → skip
+         Try col 1 → anti-diag (2+1=3 vs 1+2=3) conflict → skip
+         Try col 2 → col conflict → skip
+         Try col 3 → no conflict → place
+    Board:
+    Q . . .
+    . . Q .
+    . . . Q
+    . . . .
+  Row 3: Try col 0 → no conflict → place
+    Board:
+    Q . . .
+    . . Q .
+    . . . Q
+    . Q . .  ← wait, col 1 check...
+  (The algorithm tries all columns for row 3 and backtracks
+   if none work, then returns to row 2 and tries the next
+   available column, and so on.)
+WHAT HAPPENS WHEN WE BACKTRACK IN N-QUEENS?
+  1. Remove queen from board[row][col]
+  2. Remove col from cols set
+  3. Remove (row-col) from diag set
+  4. Remove (row+col) from anti_diag set
+  5. Try next column in the same row
+Time Complexity: O(N!) — we try N choices for row 0,
+                 N-1 for row 1, etc.
+Space Complexity: O(N^2) for the board + O(N) for sets
+==============================================================
+SUMMARY — HOW TO IDENTIFY BACKTRACKING PROBLEMS
+
+  Signal in problem          What to do
+  --------------------       ------------------------------
+  "all possible..."          Backtracking
+  "all subsets/combinations" Use take/skip or for loop
+  "all permutations"         Use used[] array
+  "all valid placements"     Use constraint checks (N-Queens)
+  "sum equals target"        Pass remaining = target - num
+  "can reuse elements"       Stay at i (not i+1)
+  "no reuse"                 Move to i+1
+--------------------------------------------------------------
+THE THREE STEPS — ALWAYS
+  CHOOSE    → add to path / mark used / place on board
+  EXPLORE   → call backtrack recursively
+  UNDO      → remove from path / mark unused / remove from board
+--------------------------------------------------------------
+COMPLEXITY OVERVIEW
+  Problem             Time           Space
+  -------             ----           -----
+  Subsets (78)        O(2^N * N)     O(N)
+  Combination Sum(39) O(N^(T/M))     O(T/M)
+  Combinations (77)   O(C(N,K) * K)  O(K)
+  Permutations (46)   O(N! * N)      O(N)
+  N-Queens (51)       O(N!)          O(N^2)
+-------------------------------------------------------------
+QUICK COMPARISON OF ALL PROBLEMS
+  Problem      Base Case         Reuse?  Skip?  Used[]?
+  -------      ---------         ------  -----  -------
+  Subsets      i==len(nums)      No      YES    No
+  Comb Sum     remaining==0      YES     No     No
+  Combinations len(path)==k      No      No     No
+  Permutations len(path)==len    No      No     YES
+  N-Queens     row==n            No      No     sets
+
+
 
