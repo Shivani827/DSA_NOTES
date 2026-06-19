@@ -84,3 +84,546 @@ Last level filled from left to right.
     / \   /
    4  5  6
 -->Perfect Binary Tree:All internal nodes have 2 children and all leaf nodes are at the same level.
+
+4.Binary Tree Implementation
+class TreeNode:
+    def __init__(self, val):
+        self.val = val
+        self.left = None
+        self.right = None
+Creating a Tree:
+root = TreeNode(1)
+root.left = TreeNode(2)
+root.right = TreeNode(3)
+root.left.left = TreeNode(4)
+root.left.right = TreeNode(5)
+
+5.Traversals-DFS
+-->Preorder=Root Left Right
+def preorder(root):
+    if not root:
+        return
+    print(root.val)
+    preorder(root.left)
+    preorder(root.right)
+O/P:1 2 4 5 3
+
+-->Inorder=Left Root Right
+def inorder(root):
+    if not root:
+        return
+    inorder(root.left)
+    print(root.val)
+    inorder(root.right)
+O/P:4 2 5 1 3
+
+-->Postorder=Left Right Root
+def postorder(root):
+    if not root:
+        return
+    postorder(root.left)
+    postorder(root.right)
+    print(root.val)
+O/P:4 5 2 3 1
+
+6.BFS — Breadth First Search (Level Order)
+**Analogy:** Watering plants floor by floor — you complete one level before going to the next.
+**Tool:** Use a **Queue** (`collections.deque`)
+Tree:
+        1
+       / \
+      2   3
+     / \
+    4   5
+
+Level Order → [[1], [2, 3], [4, 5]]
+-----
+code
+----------
+from collections import deque
+def level_order(root):
+    if not root:
+        return []
+    result = []
+    queue = deque([root])
+    while queue:
+        level = []
+        for _ in range(len(queue)):        # process all nodes at current level
+            node = queue.popleft()
+            level.append(node.val)
+            if node.left:
+                queue.append(node.left)
+            if node.right:
+                queue.append(node.right)
+        result.append(level)
+    return result
+
+7.Height of Tree
+Definition:Number of edges in longest path from root to leaf.
+def height(root):
+    if not root:
+        return -1
+    return 1 + max(
+        height(root.left),
+        height(root.right)
+    )
+
+Time Complexity:O(n)
+
+8.Count Nodes
+def countNodes(root):
+    if not root:
+        return 0
+    return ( 1 + countNodes(root.left)+ countNodes(root.right) )
+
+Time Complexity:O(n)
+
+9.Sum of Nodes
+def sumNodes(root):
+    if not root:
+        return 0
+    return (root.val+ sumNodes(root.left)+ sumNodes(root.right) )
+
+Time Complexity:O(n)
+
+10.Minimum Node Value
+def minimum(root):
+    if not root:
+        return float('inf')
+    return min(  root.val,minimum(root.left),minimum(root.right)
+    )
+
+Time Complexity:O(n)
+
+11.Maximum Node Value
+def maximum(root):
+    if not root:
+        return float('-inf')
+    return max(
+        root.val,
+        maximum(root.left),
+        maximum(root.right)
+    )
+
+Time Complexity:O(n)
+
+12.Diameter of a Tree
+Definition:The longest path between any two nodes (path may or may not pass through root).
+        1
+       / \
+      2   3
+     / \
+    4   5
+
+Diameter = 3  (path: 4 → 2 → 1 → 3, or 5 → 2 → 1 → 3)
+### Code
+def diameter_of_binary_tree(root):
+    max_diameter = [0]    # use list to modify inside nested function
+    def depth(node):
+        if not node:
+            return 0
+        left = depth(node.left)
+        right = depth(node.right)
+        max_diameter[0] = max(max_diameter[0], left + right)
+        return 1 + max(left, right)
+    depth(root)
+    return max_diameter[0]
+
+
+13.Binary Search Tree (BST)
+A BST is a Binary Tree where:Left Subtree < Root and Right Subtree > Root
+
+Example:
+
+          8
+        /   \
+       3     10
+      / \      \
+     1   6      14
+-->Search in BST
+LeetCode 700
+
+def searchBST(root, val):
+    if not root:
+        return None
+    if root.val == val:
+        return root
+    if val < root.val:
+        return searchBST(root.left, val)
+    return searchBST(root.right, val)
+
+Time Complexity:O(log n)
+
+14.Insert into BST
+LeetCode 701
+def insertIntoBST(root, val):
+    if not root:
+        return TreeNode(val)
+    if val < root.val:
+        root.left = insertIntoBST(
+            root.left,
+            val
+        )
+    else:
+        root.right = insertIntoBST(
+            root.right,
+            val
+        )
+     return root
+
+Time Complexity:O(log n)-Average Case
+
+15.Validate BST
+A tree is a BST if:Left < Root < Right for every node.
+
+Wrong Approach is Checking only immediate children.
+
+       5
+      / \
+     4   6
+        / \
+       3   7
+
+3 is smaller than 5.
+Hence not a BST.
+
+Correct Approach:Maintain range.
+def isValidBST(root):
+    def dfs(node, low, high):
+        if not node:
+            return True
+        if not (low < node.val < high):
+            return False
+        return (
+            dfs(node.left, low, node.val)
+            and
+            dfs(node.right, node.val, high)
+        )
+    return dfs(
+        root,
+        float('-inf'),
+        float('inf')
+    )
+LeetCode 98
+Time Complexity:O(n)
+===================================================
+## 🎯 Placement-Focused LeetCode Problems
+ P1: Binary Tree Preorder Traversal (LC #144)
+**Problem:** Return preorder traversal of binary tree.
+**Approach:** Root → Left → Right (Recursive or Iterative with Stack)
+
+# Recursive
+def preorderTraversal(root):
+    if not root:
+        return []
+    return [root.val] + preorderTraversal(root.left) + preorderTraversal(root.right)
+
+# Iterative (Stack)
+def preorderTraversal(root):
+    if not root:
+        return []
+    stack, result = [root], []
+    while stack:
+        node = stack.pop()
+        result.append(node.val)
+        if node.right: stack.append(node.right)   # right first (LIFO)
+        if node.left:  stack.append(node.left)
+    return result
+
+**Time:** O(n) | **Space:** O(n)
+
+---
+
+### P2: Binary Tree Inorder Traversal (LC #94)
+**Problem:** Return inorder traversal of binary tree.
+# Recursive
+def inorderTraversal(root):
+    if not root:
+        return []
+    return inorderTraversal(root.left) + [root.val] + inorderTraversal(root.right)
+
+# Iterative (Stack)
+def inorderTraversal(root):
+    stack, result = [], []
+    curr = root
+    while curr or stack:
+        while curr:                  # go as far left as possible
+            stack.append(curr)
+            curr = curr.left
+        curr = stack.pop()
+        result.append(curr.val)
+        curr = curr.right            # move to right subtree
+    return result
+```
+**Time:** O(n) | **Space:** O(n)
+
+---
+### P3: Binary Tree Level Order Traversal (LC #102)
+
+**Problem:** Return nodes level by level as list of lists.
+from collections import deque
+def levelOrder(root):
+    if not root:
+        return []
+    result = []
+    queue = deque([root])
+    while queue:
+        level = []
+        for _ in range(len(queue)):
+            node = queue.popleft()
+            level.append(node.val)
+            if node.left:  queue.append(node.left)
+            if node.right: queue.append(node.right)
+        result.append(level)
+    return result
+```
+**Time:** O(n) | **Space:** O(n)
+---
+
+### P4: Maximum Depth of Binary Tree (LC #104)
+**Problem:** Find the maximum depth (height) of a binary tree.
+
+def maxDepth(root):
+    if not root:
+        return 0
+    return 1 + max(maxDepth(root.left), maxDepth(root.right))
+```
+
+**Trace:**
+```
+maxDepth(1)
+  = 1 + max(maxDepth(2), maxDepth(3))
+  = 1 + max(2, 1)
+  = 3
+```
+**Time:** O(n) | **Space:** O(h) where h = height
+---
+
+### P5: Same Tree (LC #100)
+**Problem:** Check if two binary trees are identical (same structure and values).
+
+def isSameTree(p, q):
+    if not p and not q:    # both null → same
+        return True
+    if not p or not q:     # one null, one not → different
+        return False
+    if p.val != q.val:     # values differ
+        return False
+    return isSameTree(p.left, q.left) and isSameTree(p.right, q.right)
+```
+===================================================================
+**Key cases to handle:**
+1. Both null → True
+2. One null → False
+3. Values differ → False
+4. Recurse on children
+
+**Time:** O(n) | **Space:** O(h)
+
+---
+
+### P6: Invert Binary Tree (LC #226)
+
+**Problem:** Mirror the binary tree (swap left and right at every node).
+
+```
+Before:        After:
+    4              4
+   / \            / \
+  2   7    →    7   2
+ / \ / \       / \ / \
+1  3 6  9     9  6 3  1
+```
+
+```python
+def invertTree(root):
+    if not root:
+        return None
+    root.left, root.right = invertTree(root.right), invertTree(root.left)
+    return root
+```
+
+**Time:** O(n) | **Space:** O(h)
+
+---
+
+### P7: Diameter of Binary Tree (LC #543)
+
+**Problem:** Find the length of the longest path between any two nodes.
+
+```python
+def diameterOfBinaryTree(root):
+    self.max_d = 0
+
+    def depth(node):
+        if not node:
+            return 0
+        left  = depth(node.left)
+        right = depth(node.right)
+        self.max_d = max(self.max_d, left + right)
+        return 1 + max(left, right)
+
+    depth(root)
+    return self.max_d
+```
+
+> 💡 **Diameter ≠ Height.** Diameter is the longest path; it may not pass through root!
+
+**Time:** O(n) | **Space:** O(h)
+
+---
+
+### P8: Validate Binary Search Tree (LC #98)
+
+**Problem:** Check if a binary tree is a valid BST.
+
+**Wrong Approach:** Only checking `node.left.val < node.val` — ignores ancestor constraints!
+
+**Correct Approach:** Pass valid `min` and `max` range down the recursion.
+
+```python
+def isValidBST(root):
+    def validate(node, min_val, max_val):
+        if not node:
+            return True
+        if not (min_val < node.val < max_val):
+            return False
+        return (validate(node.left,  min_val,   node.val) and
+                validate(node.right, node.val,  max_val))
+
+    return validate(root, float('-inf'), float('inf'))
+```
+
+**Trace:**
+```
+        5  (range: -inf to +inf)  ✓
+       / \
+      3   7  (3: -inf to 5 ✓) (7: 5 to +inf ✓)
+     / \
+    2   4  (2: -inf to 3 ✓) (4: 3 to 5 ✓)
+```
+
+**Time:** O(n) | **Space:** O(h)
+
+---
+
+### P9: Lowest Common Ancestor of a BST (LC #235)
+
+**Problem:** Find the LCA of two nodes p and q in a BST.
+
+**Key Insight:** Use BST property — no need to explore the whole tree!
+
+```
+- If both p and q < root  → LCA is in the LEFT subtree
+- If both p and q > root  → LCA is in the RIGHT subtree
+- Otherwise               → root IS the LCA
+```
+
+```python
+def lowestCommonAncestor(root, p, q):
+    if p.val < root.val and q.val < root.val:
+        return lowestCommonAncestor(root.left, p, q)
+    elif p.val > root.val and q.val > root.val:
+        return lowestCommonAncestor(root.right, p, q)
+    else:
+        return root    # split point = LCA
+```
+
+**Iterative version:**
+```python
+def lowestCommonAncestor(root, p, q):
+    node = root
+    while node:
+        if p.val < node.val and q.val < node.val:
+            node = node.left
+        elif p.val > node.val and q.val > node.val:
+            node = node.right
+        else:
+            return node
+```
+
+**Time:** O(h) | **Space:** O(1) iterative
+
+---
+
+### P10: Kth Smallest Element in a BST (LC #230)
+
+**Problem:** Find the kth smallest element in a BST.
+
+**Key Insight:** Inorder traversal of a BST gives elements in **sorted (ascending) order**!
+
+```python
+# Approach 1: Full inorder (simple)
+def kthSmallest(root, k):
+    def inorder(node):
+        if not node:
+            return []
+        return inorder(node.left) + [node.val] + inorder(node.right)
+
+    return inorder(root)[k - 1]
+
+
+# Approach 2: Early stopping (optimal)
+def kthSmallest(root, k):
+    stack = []
+    curr = root
+    count = 0
+
+    while curr or stack:
+        while curr:
+            stack.append(curr)
+            curr = curr.left
+        curr = stack.pop()
+        count += 1
+        if count == k:
+            return curr.val    # stop as soon as we find kth
+        curr = curr.right
+```
+
+**Time:** O(h + k) for early-stop | **Space:** O(h)
+
+---
+
+-->Is the Process Always Linear?
+
+**No!** Just like the analytics lifecycle, tree problems loop back:
+
+```
+Understand Problem
+      ↓
+Identify Tree Type (Binary / BST / General)
+      ↓
+Choose Traversal → "Wait, DFS or BFS?"
+      ↓
+Write Recursive / Iterative Solution
+      ↓
+Trace with Example → "Edge case missed!" ──→ Fix & Re-trace
+      ↓
+Optimize (Space / Time)
+      ↓
+Code Final Solution
+```
+
+---
+
+## 🌟 Quick Complexity Reference
+
+| Operation | Average | Worst (Skewed Tree) |
+|-----------|---------|---------------------|
+| BST Search | O(log n) | O(n) |
+| BST Insert | O(log n) | O(n) |
+| Height | O(n) | O(n) |
+| DFS (all) | O(n) | O(n) |
+| BFS | O(n) | O(n) |
+| Diameter | O(n) | O(n) |
+
+---
+
+## ✅ Key Takeaways
+
+1. **Always define your base case first** — `if not root: return ...`
+2. **Inorder of BST = Sorted array** — golden rule for many problems
+3. **DFS uses recursion/stack; BFS uses a queue**
+4. **Diameter ≠ Height** — diameter can skip the root
+5. **Validate BST with range bounds**, not just left/right comparison
+6. **LCA in BST uses BST property** — O(h) instead of O(n)
