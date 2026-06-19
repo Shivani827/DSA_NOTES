@@ -1,1 +1,65 @@
+1.Introduction to Graphs
+-->A Graph is a non-linear data structure consisting of a collection of:
+   Vertices (Nodes),Edges (Connections)
+Graphs are used to represent relationships between objects.
+Unlike a tree, graphs have no rules — nodes can connect freely, in any direction, with or without cycles.
 
+2.Why Graphs? — Limitation of Trees Trees are great for hierarchical data (folders, family trees),
+but they are too restrictive for many real-world problems: 
+• A node in a tree can have only ONE parent. 
+• There is only ONE path between any two nodes.
+• There are NO cycles in a tree. Graphs remove all these restrictions. 
+Any node can connect to any other node, in any direction, with any number of connections. 
+Important rule:  Every Tree is a Graph, but every Graph is NOT a Tree.
+Every tree is a graph   ✓        Every graph is not a tree   ✗ 
+
+3.Real World Examples
+Google Maps
+Cities  -> Vertices
+Roads   -> Edges
+Social Network
+Users       -> Vertices
+Friendship  -> Edges
+Computer Network
+Devices     -> Vertices
+Connections -> Edges
+
+4.Graph Terminology
+Consider:
+        A
+       / \
+      B---C
+      |
+      D
+*Vertex / Node:A point in a graph which stores data.
+Example:A, B, C, D are vertices.
+
+*Edge:Connection between two vertices.
+Example:
+A-B
+A-C
+B-C
+B-D are edges.
+
+*Adjacent Vertices:Two vertices directly connected by an edge.
+Example:A and B are adjacent
+*Degree:Number of edges connected to a vertex.
+Example:
+A degree = 2
+B degree = 3
+C degree = 2
+D degree = 1
+
+*In-degree:Number of incoming edges to a vertex.
+Example:
+A ---> B
+B has indegree = 1
+
+*Out-degree:Number of outgoing edges from a vertex.
+Example:
+A ---> B
+A has outdegree = 1
+
+*Path:Sequence of vertices connected by edges.
+Example:
+A -> B -> D is a path.
