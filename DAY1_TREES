@@ -1,1 +1,86 @@
+1.What is a Tree?
+A Tree is a non-linear hierarchical data structure consisting of nodes connected by edges.
+Unlike arrays and linked lists (linear structures), trees store data in a hierarchical manner.
+*Real World Examples
+File System
+Organization Hierarchy
+Family Tree
+HTML DOM Structure
 
+2.TREE TERMINOLOGY
+        A
+      /   \
+     B     C
+    / \     \
+   D   E     F
+
+Node:Each element in a tree is called a node.
+Example:A, B, C, D, E, F
+
+Root:The topmost node of a tree.
+Example:A
+
+Parent:A node having one or more children.
+Example:
+A is parent of B and C
+B is parent of D and E
+
+Child:Nodes directly connected below a parent.
+Example:B and C are children of A
+
+Sibling:Nodes having the same parent.
+Example:
+B and C are siblings
+D and E are siblings
+
+Leaf Node:A node having no children.
+Example:D, E, F
+
+Ancestors:All nodes from root to the current node.
+For node E:A → B → E
+Ancestors = A, B
+
+Descendants:All nodes below a given node.
+For node B:D, E are descendants.
+Degree of Node
+Number of children of a node.
+Example:A → degree = 2
+B → degree = 2
+C → degree = 1
+D → degree = 0
+
+Depth:Number of edges from root to the node.
+Example:A = 0
+B = 1
+D = 2
+
+Height of Node:Number of edges in the longest path from that node to a leaf.
+Example:D = 0
+B = 1
+A = 2
+
+Height of Tree:Height of the root node.
+Example:Height = 2
+
+Level:Level = Depth + 1(if level of  root=1)
+Level 0 : A
+Level 1 : B C
+Level 2 : D E F
+
+3.Types of Trees
+--> Full Binary Tree:Every node has either:
+0 children
+2 children
+        1
+      /   \
+     2     3
+    / \
+   4   5
+-->Complete Binary Tree:All levels completely filled except possibly the last level.
+Last level filled from left to right.
+        1
+      /   \
+     2     3
+    / \   /
+   4  5  6
+-->Perfect Binary Tree:All internal nodes have 2 children and all leaf nodes are at the same level.
