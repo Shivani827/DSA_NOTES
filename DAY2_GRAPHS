@@ -13,7 +13,7 @@ Any node can connect to any other node, in any direction, with any number of con
 Important rule:  Every Tree is a Graph, but every Graph is NOT a Tree.
 Every tree is a graph   ✓        Every graph is not a tree   ✗ 
 
-3.Real World Examples
+-->Real World Examples
 Google Maps
 Cities  -> Vertices
 Roads   -> Edges
@@ -24,7 +24,7 @@ Computer Network
 Devices     -> Vertices
 Connections -> Edges
 
-4.Graph Terminology
+3.Graph Terminology
 Consider:
         A
        / \
@@ -63,3 +63,591 @@ A has outdegree = 1
 *Path:Sequence of vertices connected by edges.
 Example:
 A -> B -> D is a path.
+
+*Cycle:A path which starts and ends at the same vertex.
+Example:
+A
+| \
+B--C
+A -> B -> C -> A forms a cycle.
+
+*Connected Graph:A graph where every node can be reached from every other node.
+Example:A---B---C---D
+
+*Disconnected Graph:A graph having separate components.
+Example:
+A---B
+
+C---D
+
+*Component:A connected part of a graph.
+Above graph has:
+2 components
+
+4.Types of Graphs
+-->Undirected Graph:Edges have no direction.
+Example:
+A ----- B
+A can reach B
+B can reach A
+Representation:graph={
+    "A":["B"],
+    "B":["A"]
+}
+Used in: Social networks (friendship is mutual), roads between cities. 
+
+-->2. Directed Graph:Edges have direction.
+Example:
+A ----> B
+A can reach B
+B cannot reach A
+Representation:graph={
+    "A":["B"],
+    "B":[]
+}
+Used in: Twitter follow (one-way), web page links, task dependencies. 
+
+-->3. Weighted Graph:Edges contain values/cost.
+Example:
+A ----5---- B
+5 represents weight.
+Used in:
+Maps
+Shortest path
+
+-->4.Unweighted Graph:Edges have no values.
+Example:A ---- B
+Used in: Friend suggestions, maze solving, basic connectivity. 
+
+-->5.Cyclic Graph:Graph containing at least one cycle.
+Example:
+A---B
+ \ /
+  C
+Used in: Road networks with roundabouts, circular dependencies. 
+
+-->6. Acyclic Graph:Graph with no cycles.
+Example:A---B---C
+Used in: Course prerequisites, build systems, package dependencies. 
+
+
+6.Graph Representation:Consider graph:
+A graph drawn on paper is easy for humans to understand, but a computer needs a formal data
+structure to store it. We have three main options.
+
+4.1 Edge List
+Simply store all edges as a list of pairs [u, v], or triples [u, v, w] for weighted graphs.
+ edges = [
+     [0, 1],      # edge between node 0 and node 1
+     [0, 2],
+     [1, 3],
+     [2, 3]
+ ]
+
+ # Weighted version (u, v, weight)
+ edges = [
+     [0, 1, 5],
+     [0, 2, 3],
+     [1, 3, 2]
+ ]
+Space: O(E) Limitation: Slow to find all neighbours of a node — must scan all edges.
+
+4.2 Adjacency Matrix
+Create a V x V grid. Cell [i][j] = 1 if edge exists between node i and node j, else 0. For weighted
+graphs, store the weight instead of 1.
+
+Example for the graph: 0-1, 0-2, 1-3, 2-3
+        0 1 2 3
+   0 [ 0 1 1 0 ]
+   1 [ 1 0 0 1 ]
+   2 [ 1 0 0 1 ]
+   3 [ 0 1 1 0 ]
+ # Build adjacency matrix from edges (unweighted, undirected)
+ n = 4
+ edges = [[0,1],[0,2],[1,3],[2,3]]
+ matrix = [[0]*n for _ in range(n)]
+ for u, v in edges:
+     matrix[u][v] = 1
+     matrix[v][u] = 1    # remove this line for directed graph
+
+ # For weighted graph:
+ for u, v, w in edges:
+     matrix[u][v] = w
+     matrix[v][u] = w
+Space: O(V²) Good for: Dense graphs. Bad for: Sparse graphs — wastes memory (1000
+nodes, 10 edges = 1 million cells!).
+
+4.3 Adjacency List (Most Commonly Used)
+Each node stores only its neighbours. Much more memory-efficient than a matrix for sparse
+graphs.
+ # Method 1: Dictionary (works with any node labels)
+ graph = {
+     0: [1, 2],
+     1: [0, 3],
+     2: [0, 3],
+     3: [1, 2]
+ }
+
+ # Method 2: List of lists (when nodes are 0-indexed integers)
+ n = 4
+ graph = [[] for _ in range(n)]
+ for u, v in edges:
+     graph[u].append(v)
+     graph[v].append(u)    # remove for directed graph
+
+ # Weighted adjacency list
+ graph = {}
+ for u, v, w in edges:
+     if u not in graph: graph[u] = []
+     if v not in graph: graph[v] = []
+     graph[u].append((v, w))
+      graph[v].append((u, w))
+Space: O(V + E) Default choice for almost every interview and competitive programming
+problem.
+
+##When to Use Which Representation?
+ Representation                  Space                Use When
+ Edge List                       O(E)                 Simple storage, rarely need to query
+                                                      neighbours
+ Adjacency Matrix                O(V²)                Dense graph, frequent edge-existence checks
+                                                      O(1)
+ Adjacency List                  O(V+E)               Default choice — most problems (sparse
+                                                      graphs)
+
+4.3 Edges → Adjacency Matrix
+An adjacency matrix is a 2D grid of size V x V (V = number of vertices). We fill it based on the
+edges given.
+Rule: matrix[u][v] = 1 means there is an edge from u to v. For weighted graphs, store the
+weight instead of 1.
+
+a. Undirected + Unweighted
+No direction — if u connects to v, then v also connects to u. No weights — just 1 or 0.
+So we write: matrix[u][v] = 1 and matrix[v][u] = 1 (both directions)
+
+ n = 4            # number of vertices (0 to 3)
+
+ edges = [
+     [0, 1],
+     [0, 2],
+     [2, 3]
+ ]
+
+ matrix = [[0] * n for _ in range(n)]         # create n x n grid filled with 0
+
+ for u, v in edges:
+     matrix[u][v] = 1        # edge from u to v
+     matrix[v][u] = 1        # edge from v to u    (because undirected)
+
+ for row in matrix:
+     print(row)
+ # Output:
+ # [0, 1, 1, 0]
+ # [1, 0, 0, 0]
+ # [1, 0, 0, 1]
+ # [0, 0, 1, 0]
+
+b. Undirected + Weighted
+No direction — still both ways. But now each edge has a weight. Store the weight instead of 1.
+So we write: matrix[u][v] = w AND matrix[v][u] = w
+
+n = 4
+ edges = [
+     [0, 1, 5],     # u=0, v=1, weight=5
+     [0, 2, 3],
+     [2, 3, 7]
+ ]
+ matrix = [[0] * n for _ in range(n)]
+ for u, v, w in edges:
+     matrix[u][v] = w       # store weight, not 1
+     matrix[v][u] = w       # both directions
+ for row in matrix:
+     print(row)
+
+# Output:
+ # [0, 5, 3, 0]
+ # [5, 0, 0, 0]
+ # [3, 0, 0, 7]
+ # [0, 0, 7, 0]
+
+c. Directed + Unweighted
+Edge has direction — u --> v means only u can reach v, NOT the other way.
+So we write only: matrix[u][v] = 1 (one direction only, remove the v->u line)
+
+n = 4
+ edges = [
+     [0, 1],      # 0 --> 1
+     [0, 2],      # 0 --> 2
+     [2, 3]       # 2 --> 3
+ ]
+
+ matrix = [[0] * n for _ in range(n)]
+ for u, v in edges:
+     matrix[u][v] = 1         # only one direction!
+     # NO matrix[v][u]        <- this line is removed for directed graph
+for row in matrix:
+     print(row)
+
+ # Output:
+ # [0, 1, 1, 0]
+ # [0, 0, 0, 0]
+ # [0, 0, 0, 1]
+ # [0, 0, 0, 0]
+
+d. Directed + Weighted
+Edge has direction AND a weight. One-way only, store the weight.
+So we write only: matrix[u][v] = w (one direction, with weight)
+n = 4
+ edges = [
+     [0, 1, 5],      # 0 --> 1, weight 5
+     [0, 2, 3],      # 0 --> 2, weight 3
+     [2, 3, 7]       # 2 --> 3, weight 7
+ ]
+ matrix = [[0] * n for _ in range(n)]
+ for u, v, w in edges:
+     matrix[u][v] = w         # one direction, store weight
+     # NO matrix[v][u]
+ for row in matrix: print(rows)
+ # Output:
+ # [0, 5, 3, 0]
+ # [0, 0, 0, 0]
+ # [0, 0, 0, 7]
+ # [0, 0, 0, 0]
+
+#Summary — what changes in each variant:
+
+ Variant                        Edges format          matrix[u][v]           matrix[v][u]?
+ Undirected + Unweighted        [u, v]                =1                     Yes (= 1)
+ Undirected + Weighted          [u, v, w]             =w                     Yes (= w)
+ Directed + Unweighted          [u, v]                =1                     No
+ Directed + Weighted            [u, v, w]             =w                     No
+
+4.4: Edges → Adjacency List
+An adjacency list stores only the neighbours of each node — much more memory efficient than
+a matrix.
+Rule: For each edge (u, v), append v to the list of u's neighbours. For undirected, also append
+u to v's list.
+
+a. Undirected + Unweighted
+Both nodes add each other as neighbours. Store just the neighbour node.
+So we write: graph[u].append(v) AND graph[v].append(u)
+ edges = [
+     [1, 2],
+     [1, 3],
+     [3, 4],
+     [2, 4]
+ ]
+ graph = {}
+ for u, v in edges:
+     if u not in graph:
+         graph[u] = []
+     if v not in graph:
+         graph[v] = []
+     graph[u].append(v)       # u's neighbour is v
+      graph[v].append(u)      # v's neighbour is u    (undirected)
+ print(graph)
+ # Output:
+ # {1: [2, 3], 2: [1, 4], 3: [1, 4], 4: [3, 2]}
+
+Alternative — using list of lists (when nodes are 0-indexed integers):
+ n = 4
+ edges = [[0, 1], [1, 2], [2, 3], [3, 0]]
+ graph = [[] for _ in range(n)]      # graph[0]=[], graph[1]=[], ...
+ for u, v in edges:
+     graph[u].append(v)
+     graph[v].append(u)
+ print(graph)
+ # Output: [[1, 3], [0, 2], [1, 3], [2, 0]]
+
+b. Undirected + Weighted
+Both directions. Store the neighbour as a tuple (neighbour, weight) so we remember the cost.
+So we write: graph[u].append((v, w)) AND graph[v].append((u, w))
+
+ edges = [
+     [1, 2, 5],     # u=1, v=2, weight=5
+     [1, 3, 2],
+     [3, 4, 7]
+ ]
+ graph = {}
+ for u, v, w in edges:
+     if u not in graph:
+         graph[u] = []
+     if v not in graph:
+         graph[v] = []
+     graph[u].append((v, w))       # store (neighbour, weight)
+     graph[v].append((u, w))       # both directions
+ print(graph)
+
+ # Output:
+ # {1: [(2,5),(3,2)], 2: [(1,5)], 3: [(1,2),(4,7)], 4: [(3,7)]}
+
+
+c. Directed + Unweighted
+One direction only — u --> v. Only u adds v as a neighbour. v does NOT add u.
+So we write only: graph[u].append(v) (remove the v->u line)
+ edges = [
+     [1, 2],      # 1 --> 2
+     [1, 3],      # 1 --> 3
+     [3, 4]       # 3 --> 4
+ ]
+ graph = {}
+ for u, v in edges:
+     if u not in graph:
+         graph[u] = []
+     if v not in graph:
+         graph[v] = []
+     graph[u].append(v)    # only one direction!
+     # NO graph[v].append(u)
+ print(graph)
+
+ # Output:
+ # {1: [2, 3], 2: [], 3: [4], 4: []}
+
+d. Directed + Weighted
+One direction, with weight. Only u adds (v, w) as a neighbour.
+So we write only: graph[u].append((v, w)) (one direction, with weight)
+ edges = [
+     [1, 2, 5],      # 1 --> 2, weight 5
+     [1, 3, 2],      # 1 --> 3, weight 2
+     [3, 4, 7]       # 3 --> 4, weight 7
+ ]
+ graph = {}
+ for u, v, w in edges:
+     if u not in graph:
+         graph[u] = []
+     if v not in graph:
+         graph[v] = []
+     graph[u].append((v, w))    # one direction, store weight
+     # NO graph[v].append((u, w))
+ print(graph)
+ # Output:
+ # {1: [(2,5),(3,2)], 2: [], 3: [(4,7)], 4: []}
+
+
+##Summary — what changes in each variant:
+
+ Variant                     Edges format        What we append            Both sides?
+ Undirected + Unweighted     [u, v]              v to graph[u]             Yes (also u to
+                                                                           graph[v])
+ Undirected + Weighted       [u, v, w]           (v,w) to graph[u]         Yes (also (u,w) to
+                                                                           graph[v])
+ Directed + Unweighted       [u, v]              v to graph[u]             No
+ Directed + Weighted         [u, v, w]           (v,w) to graph[u]         No
+
+5. Depth First Search (DFS)
+DFS explores as deep as possible along each path before backtracking. Think of it as going
+down a corridor as far as you can, then coming back and trying the next corridor.
+How DFS Works
+Consider this graph:
+              0
+          /       \
+      1               2
+      |
+      3
+ graph = {
+     0: [1, 2],
+     1: [0, 3],
+     2: [0],
+     3: [1]
+ }
+Starting from node 0, DFS call trace:
+ Step         Call                 Visited Set                    Action
+ 1            dfs(0)               {0}                            Print 0, explore neighbours: 1, 2
+ 2            dfs(1)               {0, 1}                         Print 1, explore neighbours: 0 (skip),
+                                                                  3
+ 3            dfs(3)               {0, 1, 3}                      Print 3, neighbour 1 already visited.
+                                                                  Backtrack.
+ 4            dfs(2)               {0,1,2,3}                      Print 2, neighbour 0 already visited.
+                                                                  Done.
+Output: 0    1    3    2
+
+DFS Template Code
+ visited = set()
+ def dfs(node):
+     if node in visited:             # already explored, stop
+         return
+     visited.add(node)              # mark as visited
+     print(node)                   # process the node
+        for nei in graph[node]:    # explore each neighbour
+            if nei not in visited:
+                dfs(nei)           # recursive call
+ dfs(0)      # start from node 0
+
+ Property                                Value
+ Data Structure                          Stack (implicit through recursion)
+ Time Complexity                         O(V + E)
+ Space Complexity                        O(V) — visited set + call stack
+ Common Uses                             Path finding, cycle detection, connected components,
+                                         topological sort
+
+
+LeetCode 1791 — Find Center of Star Graph
+Problem: A star graph has n nodes. One center node connects to all others. Given the edge list,
+find the center node.
+Key Insight: The center node appears in every edge. So it must appear in both the first AND
+second edge.
+ # Example: edges = [[1,2],[2,3],[4,2]]      -> center = 2
+def findCenter(edges):
+     a, b = edges[0]    # nodes in first edge
+     c, d = edges[1]    # nodes in second edge
+
+      if a == c or a == d:    # 'a' appears in both edges?
+          return a
+      return b                # otherwise 'b' is the center
+
+ # Time: O(1)   Space: O(1)
+ # No need to check all edges — center always in first two.
+
+
+LeetCode 3898 — DFS on Graph (General Pattern)
+Problem pattern: Build a graph from the input, then use DFS to traverse and compute a result.
+ def solve(n, edges):
+     # Step 1: Build adjacency list
+     graph = {i: [] for i in range(n)}
+     for a, b in edges:
+         graph[a].append(b)
+         graph[b].append(a)
+      # Step 2: DFS to explore a component
+      visited = set()
+      def dfs(node):
+          visited.add(node)
+          for nei in graph[node]:
+              if nei not in visited:
+                  dfs(nei)
+      # Step 3: Trigger DFS from every unvisited node
+      for i in range(n):
+          if i not in visited:
+              dfs(i)
+Pattern: Build Graph -> DFS -> Track visited. This 3-step pattern covers 80% of graph
+problems.
+
+LeetCode 1971 — Find if Path Exists in Graph
+Problem: Given n nodes and an edge list, return True if a path exists between source and
+destination.
+ def validPath(n, edges, source, destination):
+     # Step 1: Build graph
+     graph = {i: [] for i in range(n)}
+     for a, b in edges:
+         graph[a].append(b)
+         graph[b].append(a)
+            # Step 2: DFS from source
+            visited = set()
+            def dfs(node):
+                if node == destination:    # reached the destination!
+                    return True
+                visited.add(node)
+                for nei in graph[node]:
+                    if nei not in visited:
+                        if dfs(nei):       # found path via this neighbour
+                             return True
+                return False               # no path found from this node
+
+            return dfs(source)
+
+
+Call trace for: n=3, edges=[[0,1],[1,2]], source=0, destination=2
+ Call                            Node                               Result
+ dfs(0)                          0 != 2, explore [1]                calls dfs(1)
+ dfs(1)                          1 != 2, explore [0, 2]             0 visited, calls dfs(2)
+ dfs(2)                          2 == destination                   return True
+
+
+6. Breadth First Search (BFS)
+BFS explores all nodes at the current level before going deeper. Think of it as exploring a
+building floor by floor — finish all rooms on floor 1 before going to floor 2.
+How BFS Works
+                    0
+                /       \
+            1               2
+        /
+    3
+
+
+Starting from node 0, BFS step by step:
+ Step          Queue (front -> back)       Visited                         Output
+ Start         [0]                         {0}                             —
+ Pop 0         [1, 2]                      {0, 1, 2}                       0
+ Pop 1         [2, 3]                      {0, 1, 2, 3}                    1
+ Pop 2         [3]                         {0, 1, 2, 3}                    2
+ Pop 3         []                          {0, 1, 2, 3}                    3
+
+Output: 0     1      2   3
+BFS Template Code
+ from collections import deque
+def bfs(start):
+     q = deque([start])                # initialize queue with start node
+     visited = set([start])            # mark start as visited IMMEDIATELY
+         while q:
+             node = q.popleft()        # take from FRONT (FIFO order)
+             print(node)               # process node
+             for nei in graph[node]:
+                 if nei not in visited:
+                     visited.add(nei)       # mark BEFORE adding to queue
+                     q.append(nei)          # add to BACK of queue
+
+ bfs(0)
+
+Property                                Value
+ Data Structure                          Queue (collections.deque)
+ Time Complexity                         O(V + E)
+ Space Complexity                        O(V)
+ Key Advantage                           Finds the SHORTEST PATH in unweighted graphs
+ Common Uses                             Shortest path, level-order traversal, nearest neighbour
+
+
+DFS vs BFS — Quick Comparison
+Feature             DFS                             BFS
+Strategy            Go deep first, then backtrack   Go level by level (width first)
+Data Structure      Stack / Recursion               Queue (deque)
+Time Complexity     O(V + E)                        O(V + E)
+Finds shortest?     No                              Yes (unweighted graphs)
+Mark visited        At start of dfs(node)           Before adding to queue
+Best for            Cycle detection, topo sort,     Shortest path, nearest node
+                    paths
+
+
+7. Quick Reference — Cheat Sheet
+
+Build Graph from Edges
+ # Undirected, unweighted
+ graph = {i: [] for i in range(n)}
+ for u, v in edges:
+     graph[u].append(v)
+     graph[v].append(u)
+
+ # Directed, weighted
+ graph = {}
+ for u, v, w in edges:
+     if u not in graph: graph[u] = []
+     graph[u].append((v, w))    # one direction only
+
+DFS Template
+ visited = set()
+ def dfs(node):
+     visited.add(node)
+     for nei in graph[node]:
+         if nei not in visited:
+             dfs(nei)
+
+BFS Template
+ from collections import deque
+ def bfs(start):
+     q = deque([start])
+     visited = set([start])
+     while q:
+         node = q.popleft()
+         for nei in graph[node]:
+              if nei not in visited:
+                  visited.add(nei)
+                  q.append(nei)
+
+Find Degree of a Node
+ graph = {1:[2,3], 2:[1,4], 3:[1,4], 4:[2,3]}
+ node = 1
+ degree = len(graph[node])    # -> 2
+
+Remember: Always mark nodes as visited BEFORE adding to BFS queue, and at the START
+of DFS — this prevents infinite loops in graphs with cycles.
+
+
+
+
